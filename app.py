@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import fitz  # PyMuPDF para leitura de PDFs
 import DS_Calculos as ds  # Certifique-se de que esse módulo está disponível
+import os  # Para manipular arquivos temporários
 
 st.set_page_config(page_title="Análise de Certificados Usiminas", layout="wide")
 
@@ -10,23 +11,32 @@ st.title("🔬 Análise de Certificados de Aço Carbono NRU - NTU - Usiminas")
 # Upload do arquivo PDF
 uploaded_file = st.file_uploader("📄 Envie o Certificado PDF", type=["pdf"])
 
-linha = st.text_input("🔍 Linha do Certificado a Analisar", "")
+# Campo de texto para a linha do certificado
+linha = st.text_input("🔍 Linha do Certificado a Analisar")
 
-if uploaded_file and linha:
+# **Botão para Analisar**
+if st.button("📊 Analisar Certificado") and uploaded_file and linha:
     if not linha.strip().isdigit():
-        st.error("Por favor, insira um número válido para a linha do certificado.")
+        st.error("❌ Por favor, insira um número válido para a linha do certificado.")
     else:
         try:
-            # Abrir o PDF corretamente
-            doc = fitz.open(stream=uploaded_file.getvalue(), filetype="pdf")
+            # Criar um arquivo temporário para armazenar o PDF
+            temp_file_path = f"temp_{uploaded_file.name}"
+
+            # Salvar o arquivo temporário
+            with open(temp_file_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+
+            # Agora podemos abrir o PDF corretamente
+            doc = fitz.open(temp_file_path)
 
             if len(doc) == 0:
-                st.error("O arquivo PDF está vazio ou corrompido.")
+                st.error("❌ O arquivo PDF está vazio ou corrompido.")
             else:
                 # Processar Certificado
-                df = ds.extrair_elementos_pdf_usiminas(uploaded_file, linha)
+                df = ds.extrair_elementos_pdf_usiminas(temp_file_path, linha)
                 if df is None or df.empty:
-                    st.error(f"A linha {linha} não contém dados válidos no certificado.")
+                    st.error(f"⚠️ A linha {linha} não contém dados válidos no certificado.")
                 else:
                     C = df.loc["C", 0]
                     Mn = df.loc["Mn", 0]
@@ -66,9 +76,14 @@ if uploaded_file and linha:
                         "Similaridade do Material": similaridade
                     }
 
-                    df_resultado = pd.DataFrame(resultado.items(), columns=["Parâmetro", "Valor"])
+                    resultado_df = pd.DataFrame(resultado.items(), columns=["Parâmetro", "Valor"])
+                    
+                    # Exibir os resultados
+                    st.success("✅ Análise concluída!")
+                    st.dataframe(resultado_df)
 
-                    st.dataframe(df_resultado)
+            # Remover o arquivo temporário após o processamento
+            os.remove(temp_file_path)
 
         except Exception as e:
-            st.error(f"Ocorreu um erro: {str(e)}")
+            st.error(f"❌ Ocorreu um erro: {str(e)}")

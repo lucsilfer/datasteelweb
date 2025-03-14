@@ -18,7 +18,23 @@ def calcularSolda(ceq):
 
 def calcularUsinagem(ceq):
     if ceq>=0.45:
-        return "Possibilidade de trinca"
+        return "Dificuldade para usinar"
+    elif ceq < 0.35:
+        return "Otimas condições"
+    else:
+        return"Condições normais"
+
+def calcularCalandra(ceq):
+    if ceq>=0.45:
+        return "Dificultade para Calandrar"
+    elif ceq < 0.35:
+        return "Otimas condições"
+    else:
+        return"Condições normais"
+
+def calcularDobra(ceq):
+    if ceq>=0.45:
+        return "Dificultade para Dobrar"
     elif ceq < 0.35:
         return "Otimas condições"
     else:
