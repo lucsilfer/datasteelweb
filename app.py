@@ -17,8 +17,9 @@ if uploaded_file and linha:
         st.error("Por favor, insira um número válido para a linha do certificado.")
     else:
         try:
-            # Abrir o PDF
-            doc = fitz.open(stream=uploaded_file.read(), filetype="pdf")
+            # Abrir o PDF corretamente
+            doc = fitz.open(stream=uploaded_file.getvalue(), filetype="pdf")
+
             if len(doc) == 0:
                 st.error("O arquivo PDF está vazio ou corrompido.")
             else:
